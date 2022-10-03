@@ -1,7 +1,7 @@
 ---
 # handlers file for postgres
 #
-  - name: Restart service
-    ansible.builtin.service:
-      name: "{{ pg_service }}"
-      state: restarted
+  - name: Restart service         #Handler для перезапуска сервиса Postgresql (если требуется)
+    ansible.builtin.service:      # Модуль для работы с сервисами 
+      name: "{{ pg_service }}"    #Имя сервиса, прописана в vars/main.yml
+      state: restarted            #Статус рестарт
