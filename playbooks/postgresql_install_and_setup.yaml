@@ -1,0 +1,7 @@
+---
+
+- name: Test DB install Postgesql
+  hosts: DB_TEST
+  become: yes
+  roles: 
+    - postgres
