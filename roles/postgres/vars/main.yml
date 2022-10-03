@@ -16,3 +16,4 @@
 
     db_name: postgres
     backup_dir: /opt/backups
+    scripts_dir: /opt/scripts
