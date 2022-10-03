@@ -11,19 +11,19 @@
   - name: "Add Postgresql repo_key"  ### Добавляем ключ репозитория для установки postgres
     rpm_key:
       state: present
-      key: "https://apt.postgresql.org/pub/repos/yum/RPM-GPG-KEY-PGDG-12"
+      key: "{{ pg_repo_key }}"
 
   - name: "Add Postgresql repo" ###Добавляем сам репозиторий через yum.
     yum:
-      name: "https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm"
+      name: "{{ pg_repo }}"
 
-  - name: "Install  Postgresql" ###Установка модуля postgresql-12-server. (Также можно установить другую версию, с указан
+  - name: "Install  Postgresql" ###Установка модуля postgresql-12-server. (Также можно установить другую версию, изменив переменную)
     yum:
-      name: "postgresql12-server"
+      name: "{{ pg_version }}" 
       update_cache: yes
       state: present
 
-#  - name: Creates directory
+#  - name: Creates directory   ###Здесь пытался инициализировать кластер в кастомную директорию, не работает корректно, с edb подобных проблем не было.
 #    file:
 #      path: /opt/data
 #      state: directory
@@ -31,32 +31,23 @@
 #      group: postgres
 #      mode: 0700
 #
-  - name: "Find out if PostgreSQL is initialized"
+  - name: "Find out if PostgreSQL is initialized" #Проверка по файлу pg_hba.conf в дефолтной директории data, если файл есть, инициализация не выполнятеся, если файла нет, выполняется таск ниже.
     ansible.builtin.stat:
       path: "{{ pg_data }}/pg_hba.conf"
     register: postgres_data
 
-  - name: "Initialize PostgreSQL"
-    shell: "postgresql-12-setup initdb postgresql-12 --encoding=UTF8"
+  - name: "Initialize PostgreSQL"                  #Инициализация кластера в стандартной директории
+    shell: "{{ pg_init }}"
     when: not postgres_data.stat.exists
 
-  - name: "Start and enable services"
-    service: "name={{ item }} state=started enabled=yes"
+  - name: "Start and enable services"              #Старт сервера postgres и добавление его в автозагрузку.
+    service: "{{ pg_start_command}}"
     with_items:
         - "{{ pg_service }}"
-#  - name: Grant user postgres with Ansible host
-#    postgresql_pg_hba:
-#      dest: "{{ pg_data }}/pg_hba.conf"
-#      contype: host
-#      users: postgres
-#      source: all
-#      databases: all
-#      method: trust
-#      create: true
 
-
-###Config PostgreSQL###
-
+###Config PostgreSQL###                           # Данный раздел позволяет вносить изменения в конфигурацию сервера с помошью модуля postgres 
+                                                  # Команды выполняются как ALTER SYSTEM, записываются в файл postgresql.auto.conf, 
+                                                  # для комманд требующих перезагрузку сервера postgres, настроен notify  - в случае изменения перезапускать
   - name: Set listen addresses parameter
     postgresql_set:
       name: listen_addresses
@@ -129,7 +120,8 @@
     notify: Restart service
 
 
-###Add Roles for PostgreSQL###
+###Add Roles for PostgreSQL###     ###Данный раздел позволяет добавлять/удалять пользователей, и предоставлять им определенные права, и добавлять запись в pg_hba.conf
+                                   ### также с помощью модуля Ansible  - postgres
 
   - name: Create user for test
     postgresql_user:
@@ -156,9 +148,10 @@
       databases: postgres
       method: md5
 
-###Backup DB###
-#
-  - name: Backup directory    
+###Backup DB###    ### В данном разделе описывается механизм автоматизации резервного копирования. 
+                   ### Создание директории для хранения бэкапа, создание директории для скрипта автоматизации
+
+  - name: Backup directory   ### Создание директории для хранения бэкапа   
     ansible.builtin.file:
       path: "{{ backup_dir }}"
       mode: 0700
@@ -166,7 +159,7 @@
       state: directory
       ### С этого таска и ниже  можно указать delegeta_to указав alias реплики из inventory тогда все что ниже применится к серверу реплики для снятия БЭКАПА все директории.
 
-  - name: Scripts directory
+  - name: Scripts directory ### Создание директории для хранения скриптов   
     ansible.builtin.file:
      path: /opt/scripts/
      mode: 0700
@@ -174,7 +167,7 @@
      state: directory
      
 
-  - name: Backup Postgresql with script and add cronjob
+  - name: Backup Postgresql with script  ### Генерация скрипта с помощью шаблона jinja
     template:
       src: backup_db.j2 
       dest: "{{ scripts_dir }}/backup_db.sh"
@@ -182,7 +175,7 @@
       owner: postgres
       
 
-  - name: Backup Postgres 1 day of month"
+  - name: Backup Postgres 1 day of month"  ###Добавления скрипта в задания Cron юзеру postgres, с запуском каждый первый день месяца в час ночи.
     ansible.builtin.cron:
       name: "backup_db"
       minute: "0"
@@ -193,7 +186,7 @@
     become_user: postgres 
 
 
-#  - name: Backup db
+#  - name: Backup db    ### Также таск по снятию дампа с объектов БД
 #    community.postgresql.postgresql_db:
 #      state: dump
 #      name: "{{ db_name }}"
