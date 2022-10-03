@@ -1,0 +1,11 @@
+[DB_TEST]
+
+test_db ansible_host=10.10.10.10
+
+[DB_PROD]
+
+prod_db ansible_host=10.10.10.20
+
+[DB_ALL:children]
+DB_TEST
+DB_PROD
