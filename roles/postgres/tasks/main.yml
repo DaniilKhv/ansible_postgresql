@@ -1,23 +1,23 @@
 ---
 # tasks file for postgres
 
-###Install Postgresql###
-  - name: "Install prerequisites"
+###Install Postgresql###  ###В данном блоке устанавливается дополнительный пакет psycopg2, для работы официального модуля postgres от ansible.
+  - name: "Install prerequisites"  
     yum:
       name: "python-psycopg2"
       state: "present"
       update_cache: "yes"
 
-  - name: "Add Postgresql repo_key"
+  - name: "Add Postgresql repo_key"  ### Добавляем ключ репозитория для установки postgres
     rpm_key:
       state: present
       key: "https://apt.postgresql.org/pub/repos/yum/RPM-GPG-KEY-PGDG-12"
 
-  - name: "Add Postgresql repo"
+  - name: "Add Postgresql repo" ###Добавляем сам репозиторий через yum.
     yum:
       name: "https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x86_64/pgdg-redhat-repo-latest.noarch.rpm"
 
-  - name: "Install  Postgresql"
+  - name: "Install  Postgresql" ###Установка модуля postgresql-12-server. (Также можно установить другую версию, с указан
     yum:
       name: "postgresql12-server"
       update_cache: yes
