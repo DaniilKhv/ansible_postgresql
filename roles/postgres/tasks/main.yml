@@ -177,7 +177,7 @@
   - name: Backup Postgresql with script and add cronjob
     template:
       src: backup_db.j2 
-      dest: /opt/scripts/backup_db.sh
+      dest: "{{ scripts_dir }}/backup_db.sh"
       mode: 0700
       owner: postgres
       
@@ -188,7 +188,7 @@
       minute: "0"
       hour: "1"
       day: "1"
-      job: "/opt/scripts/backup_db.sh"
+      job: "{{ scripts_dir }}/backup_db.sh"
     become: yes
     become_user: postgres 
 
