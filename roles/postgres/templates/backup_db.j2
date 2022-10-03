@@ -1,5 +1,5 @@
 #!/bin/sh
-DB_DIR={{ pg_data }}   ### Скрипт на bash, для запуска резвервного копирования и перенос резервной копию в директорию. Скрипт добавляется в cron(описан в tasks/main.yml
+DB_DIR={{ pg_data }}   ### Шаблон для скрипта на bash, для запуска резвервного копирования и перенос резервной копии в директорию. Скрипт добавляется в cron(описан в tasks/main.yml
 BACKUP_DIR={{ backup_dir }}
 BACKUP_NAME=db_{{ db_name }}_backup_{{ ansible_date_time.date }}.gz
 cd {{ pg_data }}
