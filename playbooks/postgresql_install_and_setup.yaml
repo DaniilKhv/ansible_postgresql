@@ -1,7 +1,7 @@
 ---
 
-- name: Test DB install Postgesql
-  hosts: DB_TEST
-  become: yes
+- name: Test DB install Postgesql  #Имя основного Task'a
+  hosts: DB_TEST                   #Группа хостов из файла hosts, на котрых требуется выполнить playbook
+  become: yes                      #Разрешает использование sudo/root
   roles: 
-    - postgres
+    - postgres                     #Роль которая будет запускать Tasks
