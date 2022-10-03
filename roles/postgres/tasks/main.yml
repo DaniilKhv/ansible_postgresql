@@ -191,5 +191,5 @@
 #      state: dump
 #      name: "{{ db_name }}"
 #      target: "{{ backup_dir }}/{{ db_name }}-{{ ansible_date_time.date }}.gz"
-#    become: true
+#    become: yes
 #    become_user: postgres
